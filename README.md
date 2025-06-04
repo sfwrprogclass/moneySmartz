@@ -20,7 +20,7 @@ In Money Smartz, you'll navigate the financial challenges and opportunities of l
 
 1. Make sure you have Python installed on your computer
 2. Install Pygame: `pip install pygame`
-3. Run the game by executing: `python moneySmartz.py`
+3. Run the game by executing: `python main.py`
 4. Use your mouse to navigate the graphical interface and make decisions
 5. Try to maximize your net worth and achieve financial security by retirement
 
@@ -52,6 +52,53 @@ This game teaches important financial concepts:
 - Investment growth
 - Income progression
 - Financial planning
+
+## Project Structure
+
+The project follows a modular architecture with the Model-View-Controller (MVC) pattern:
+
+- **Models** (`moneySmartz/models.py`): Data structures for game entities (Player, BankAccount, Card, Loan, Asset)
+- **Views** (`moneySmartz/ui.py` and `moneySmartz/screens/`): UI components and screen classes
+- **Controller** (`moneySmartz/game.py`): Game logic and state management
+
+### Directory Structure:
+```
+moneySmartz2/
+├── docs/
+│   └── tasks.md         # Development tasks and roadmap
+├── moneySmartz/
+│   ├── screens/         # Screen classes organized by category
+│   ├── __init__.py      # Package initialization
+│   ├── constants.py     # Game constants and configuration
+│   ├── game.py          # Game logic (controller)
+│   ├── models.py        # Data models
+│   └── ui.py            # UI components
+├── main.py              # Entry point
+├── moneySmartz.py       # Legacy monolithic file (being migrated)
+└── README.md            # This file
+```
+
+## Development Status
+
+This project is under active development. Current progress:
+
+- ✅ Basic game functionality implemented
+- ✅ Modular architecture started
+- ✅ MVC pattern partially implemented
+- 🔄 Migration from monolithic to modular structure in progress
+- 📝 Documentation improvements ongoing
+- 🚧 Many features planned (see `docs/tasks.md`)
+
+## How to Contribute
+
+Contributions are welcome! Here's how you can help:
+
+1. Check the `docs/tasks.md` file for planned improvements
+2. Fork the repository
+3. Create a feature branch (`git checkout -b feature/amazing-feature`)
+4. Commit your changes (`git commit -m 'Add some amazing feature'`)
+5. Push to the branch (`git push origin feature/amazing-feature`)
+6. Open a Pull Request
 
 ## Tips for Success
 
