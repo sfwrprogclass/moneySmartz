@@ -24,3 +24,6 @@ FONT_SMALL = 18
 FONT_MEDIUM = 24
 FONT_LARGE = 32
 FONT_TITLE = 48
+
+# Asset paths
+ASSETS_PATH = "assets"

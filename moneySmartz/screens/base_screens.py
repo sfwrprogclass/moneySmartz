@@ -1,5 +1,6 @@
 import pygame
 import random
+import os
 from pygame.locals import *
 from moneySmartz.constants import *
 from moneySmartz.ui import Screen, Button, TextInput
@@ -36,6 +37,28 @@ class TitleScreen(Screen):
 
         # Background
         self.bg_color = LIGHT_BLUE
+        # Load background image
+        bg_path = os.path.join(ASSETS_PATH, "StartMenuBG-Recovered.png")
+        try:
+            self.bg_image = pygame.image.load(bg_path)
+            self.bg_image = pygame.transform.scale(self.bg_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+            self.has_bg_image = True
+        except pygame.error:
+            print(f"Could not load background image: {bg_path}")
+            self.has_bg_image = False
+
+        # Logo image
+        logo_path = os.path.join(ASSETS_PATH, "Money Smarts logo.png")
+        try:
+            self.logo_image = pygame.image.load(logo_path)
+            # Scale the logo to a reasonable size
+            logo_width = 400
+            logo_height = int(self.logo_image.get_height() * (logo_width / self.logo_image.get_width()))
+            self.logo_image = pygame.transform.scale(self.logo_image, (logo_width, logo_height))
+            self.has_logo = True
+        except pygame.error:
+            print(f"Could not load logo image: {logo_path}")
+            self.has_logo = False
 
         # Logo/Title animation
         self.title_y = -100
@@ -72,29 +95,37 @@ class TitleScreen(Screen):
     def draw(self, surface):
         """Draw the title screen."""
         # Background
-        surface.fill(self.bg_color)
+        if hasattr(self, 'has_bg_image') and self.has_bg_image:
+            surface.blit(self.bg_image, (0, 0))
+        else:
+            surface.fill(self.bg_color)
 
-        # Draw money-themed background elements
-        for i in range(20):
-            x = random.randint(0, SCREEN_WIDTH)
-            y = random.randint(0, SCREEN_HEIGHT)
-            size = random.randint(10, 30)
-            alpha = random.randint(20, 100)
+            # Draw money-themed background elements
+            for i in range(20):
+                x = random.randint(0, SCREEN_WIDTH)
+                y = random.randint(0, SCREEN_HEIGHT)
+                size = random.randint(10, 30)
+                alpha = random.randint(20, 100)
 
-            dollar_surface = pygame.Surface((size, size), pygame.SRCALPHA)
-            pygame.draw.circle(dollar_surface, (0, 200, 0, alpha), (size//2, size//2), size//2)
+                dollar_surface = pygame.Surface((size, size), pygame.SRCALPHA)
+                pygame.draw.circle(dollar_surface, (0, 200, 0, alpha), (size//2, size//2), size//2)
 
-            font = pygame.font.SysFont('Arial', size)
-            text = font.render("$", True, WHITE)
-            text_rect = text.get_rect(center=(size//2, size//2))
-            dollar_surface.blit(text, text_rect)
+                font = pygame.font.SysFont('Arial', size)
+                text = font.render("$", True, WHITE)
+                text_rect = text.get_rect(center=(size//2, size//2))
+                dollar_surface.blit(text, text_rect)
 
-            surface.blit(dollar_surface, (x, y))
+                surface.blit(dollar_surface, (x, y))
 
-        # Title
-        title_surface = self.title_font.render("MONEY SMARTZ", True, GREEN)
-        title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, self.title_y))
-        surface.blit(title_surface, title_rect)
+        # Logo or Title
+        if hasattr(self, 'has_logo') and self.has_logo:
+            logo_rect = self.logo_image.get_rect(center=(SCREEN_WIDTH // 2, self.title_y))
+            surface.blit(self.logo_image, logo_rect)
+        else:
+            # Fallback to text title if logo can't be loaded
+            title_surface = self.title_font.render("MONEY SMARTZ", True, GREEN)
+            title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, self.title_y))
+            surface.blit(title_surface, title_rect)
 
         # Subtitle with fade-in
         subtitle_surface = self.subtitle_font.render("Financial Life Simulator", True, (0, 100, 0))
@@ -115,6 +146,16 @@ class NameInputScreen(Screen):
 
         # Title
         self.title_font = pygame.font.SysFont('Arial', FONT_LARGE)
+
+        # Load background image
+        bg_path = os.path.join(ASSETS_PATH, "image (5).png")
+        try:
+            self.bg_image = pygame.image.load(bg_path)
+            self.bg_image = pygame.transform.scale(self.bg_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+            self.has_bg_image = True
+        except pygame.error:
+            print(f"Could not load background image: {bg_path}")
+            self.has_bg_image = False
 
         # Text input
         self.name_input = TextInput(
@@ -166,7 +207,15 @@ class NameInputScreen(Screen):
     def draw(self, surface):
         """Draw the name input screen."""
         # Background
-        surface.fill(WHITE)
+        if hasattr(self, 'has_bg_image') and self.has_bg_image:
+            surface.blit(self.bg_image, (0, 0))
+
+            # Semi-transparent overlay for better text readability
+            overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+            overlay.fill((255, 255, 255, 180))  # White with alpha
+            surface.blit(overlay, (0, 0))
+        else:
+            surface.fill(WHITE)
 
         # Title
         title_surface = self.title_font.render("Enter Your Name", True, BLACK)
@@ -190,6 +239,16 @@ class IntroScreen(Screen):
         # Title
         self.title_font = pygame.font.SysFont('Arial', FONT_LARGE)
         self.text_font = pygame.font.SysFont('Arial', FONT_MEDIUM)
+
+        # Load background image
+        bg_path = os.path.join(ASSETS_PATH, "image (3).png")
+        try:
+            self.bg_image = pygame.image.load(bg_path)
+            self.bg_image = pygame.transform.scale(self.bg_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+            self.has_bg_image = True
+        except pygame.error:
+            print(f"Could not load background image: {bg_path}")
+            self.has_bg_image = False
 
         # Buttons
         open_account_button = Button(
@@ -226,7 +285,15 @@ class IntroScreen(Screen):
     def draw(self, surface):
         """Draw the intro screen."""
         # Background
-        surface.fill(WHITE)
+        if hasattr(self, 'has_bg_image') and self.has_bg_image:
+            surface.blit(self.bg_image, (0, 0))
+
+            # Semi-transparent overlay for better text readability
+            overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+            overlay.fill((255, 255, 255, 180))  # White with alpha
+            surface.blit(overlay, (0, 0))
+        else:
+            surface.fill(WHITE)
 
         # Title
         title_surface = self.title_font.render(f"Welcome, {self.game.player.name}!", True, BLACK)
@@ -263,6 +330,19 @@ class DebitCardScreen(Screen):
         # Title
         self.title_font = pygame.font.SysFont('Arial', FONT_LARGE)
         self.text_font = pygame.font.SysFont('Arial', FONT_MEDIUM)
+
+        # Load card image
+        card_path = os.path.join(ASSETS_PATH, "card.png")
+        try:
+            self.card_image = pygame.image.load(card_path)
+            # Scale the card to a reasonable size
+            card_width = 250
+            card_height = 150
+            self.card_image = pygame.transform.scale(self.card_image, (card_width, card_height))
+            self.has_card_image = True
+        except pygame.error:
+            print(f"Could not load card image: {card_path}")
+            self.has_card_image = False
 
         # Buttons
         get_card_button = Button(
@@ -305,23 +385,42 @@ class DebitCardScreen(Screen):
         title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, 80))
         surface.blit(title_surface, title_rect)
 
-        # Card image (simple rectangle)
+        # Card image
         card_rect = pygame.Rect(SCREEN_WIDTH // 2 - 125, 150, 250, 150)
-        pygame.draw.rect(surface, BLUE, card_rect)
-        pygame.draw.rect(surface, BLACK, card_rect, 2)  # Border
 
-        # Card text
-        card_title = self.text_font.render("CHECKING ACCOUNT", True, WHITE)
-        card_title_rect = card_title.get_rect(center=(SCREEN_WIDTH // 2, 180))
-        surface.blit(card_title, card_title_rect)
+        if hasattr(self, 'has_card_image') and self.has_card_image:
+            # Use the loaded card image
+            surface.blit(self.card_image, card_rect)
 
-        card_name = self.text_font.render(self.game.player.name, True, WHITE)
-        card_name_rect = card_name.get_rect(center=(SCREEN_WIDTH // 2, 220))
-        surface.blit(card_name, card_name_rect)
+            # Card text overlay on the image
+            card_title = self.text_font.render("CHECKING ACCOUNT", True, WHITE)
+            card_title_rect = card_title.get_rect(center=(SCREEN_WIDTH // 2, 180))
+            surface.blit(card_title, card_title_rect)
 
-        card_number = self.text_font.render("**** **** **** 1234", True, WHITE)
-        card_number_rect = card_number.get_rect(center=(SCREEN_WIDTH // 2, 260))
-        surface.blit(card_number, card_number_rect)
+            card_name = self.text_font.render(self.game.player.name, True, WHITE)
+            card_name_rect = card_name.get_rect(center=(SCREEN_WIDTH // 2, 220))
+            surface.blit(card_name, card_name_rect)
+
+            card_number = self.text_font.render("**** **** **** 1234", True, WHITE)
+            card_number_rect = card_number.get_rect(center=(SCREEN_WIDTH // 2, 260))
+            surface.blit(card_number, card_number_rect)
+        else:
+            # Fallback to simple rectangle if image can't be loaded
+            pygame.draw.rect(surface, BLUE, card_rect)
+            pygame.draw.rect(surface, BLACK, card_rect, 2)  # Border
+
+            # Card text
+            card_title = self.text_font.render("CHECKING ACCOUNT", True, WHITE)
+            card_title_rect = card_title.get_rect(center=(SCREEN_WIDTH // 2, 180))
+            surface.blit(card_title, card_title_rect)
+
+            card_name = self.text_font.render(self.game.player.name, True, WHITE)
+            card_name_rect = card_name.get_rect(center=(SCREEN_WIDTH // 2, 220))
+            surface.blit(card_name, card_name_rect)
+
+            card_number = self.text_font.render("**** **** **** 1234", True, WHITE)
+            card_number_rect = card_number.get_rect(center=(SCREEN_WIDTH // 2, 260))
+            surface.blit(card_number, card_number_rect)
 
         # Explanation text
         text_lines = [
@@ -354,6 +453,16 @@ class EndGameScreen(Screen):
         self.title_font = pygame.font.SysFont('Arial', FONT_TITLE)
         self.subtitle_font = pygame.font.SysFont('Arial', FONT_LARGE)
         self.text_font = pygame.font.SysFont('Arial', FONT_MEDIUM)
+
+        # Load background image
+        bg_path = os.path.join(ASSETS_PATH, "image (4).png")
+        try:
+            self.bg_image = pygame.image.load(bg_path)
+            self.bg_image = pygame.transform.scale(self.bg_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+            self.has_bg_image = True
+        except pygame.error:
+            print(f"Could not load background image: {bg_path}")
+            self.has_bg_image = False
 
         # Calculate final stats
         self.cash = self.game.player.cash
@@ -415,7 +524,15 @@ class EndGameScreen(Screen):
     def draw(self, surface):
         """Draw the end game screen."""
         # Background
-        surface.fill(WHITE)
+        if hasattr(self, 'has_bg_image') and self.has_bg_image:
+            surface.blit(self.bg_image, (0, 0))
+
+            # Semi-transparent overlay for better text readability
+            overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+            overlay.fill((255, 255, 255, 200))  # White with alpha
+            surface.blit(overlay, (0, 0))
+        else:
+            surface.fill(WHITE)
 
         # Title
         if self.reason == "retirement":

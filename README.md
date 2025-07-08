@@ -18,11 +18,26 @@ In Money Smartz, you'll navigate the financial challenges and opportunities of l
 
 ## How to Play
 
+### Running from Source
 1. Make sure you have Python installed on your computer
 2. Install Pygame: `pip install pygame`
 3. Run the game by executing: `python main.py`
 4. Use your mouse to navigate the graphical interface and make decisions
 5. Try to maximize your net worth and achieve financial security by retirement
+
+### Running as Standalone Application (No Console)
+
+#### Option 1: Using the Batch File (Easiest)
+1. Simply double-click the `build_and_run.bat` file
+2. The script will install required packages, build the executable, and run the game automatically
+3. Use your mouse to navigate the graphical interface and make decisions
+
+#### Option 2: Manual Build
+1. Install required packages: `pip install cx_Freeze pygame`
+2. Build the executable: `python setup.py build`
+3. Navigate to the build directory (usually `build\exe.win-amd64-3.x\` where 3.x is your Python version)
+4. Run `MoneySmartz.exe` to start the game without a console window
+5. Use your mouse to navigate the graphical interface and make decisions
 
 ## GUI Features
 
@@ -31,6 +46,7 @@ In Money Smartz, you'll navigate the financial challenges and opportunities of l
 - **Interactive Decisions**: Make life choices through a point-and-click interface
 - **Visual Feedback**: Color-coded indicators for positive and negative events
 - **End Game Summary**: Visual breakdown of your financial success
+- **Custom Graphics**: Visually appealing backgrounds, logo, and card images
 
 ## Game Features
 
@@ -64,6 +80,11 @@ The project follows a modular architecture with the Model-View-Controller (MVC) 
 ### Directory Structure:
 ```
 moneySmartz2/
+├── assets/              # Game graphics and images
+│   ├── Money Smarts logo.png  # Game logo
+│   ├── StartMenuBG-Recovered.png  # Title screen background
+│   ├── card.png         # Debit/credit card image
+│   └── ...              # Other game images
 ├── docs/
 │   └── tasks.md         # Development tasks and roadmap
 ├── moneySmartz/
@@ -85,6 +106,7 @@ This project is under active development. Current progress:
 - ✅ Basic game functionality implemented
 - ✅ Modular architecture started
 - ✅ MVC pattern partially implemented
+- ✅ Custom graphics implemented for all main screens
 - 🔄 Migration from monolithic to modular structure in progress
 - 📝 Documentation improvements ongoing
 - 🚧 Many features planned (see `docs/tasks.md`)
