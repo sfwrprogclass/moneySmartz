@@ -79,7 +79,7 @@ The project follows a modular architecture with the Model-View-Controller (MVC) 
 
 ### Directory Structure:
 ```
-moneySmartz2/
+moneySmartz/
 ├── assets/              # Game graphics and images
 │   ├── Money Smarts logo.png  # Game logo
 │   ├── StartMenuBG-Recovered.png  # Title screen background
@@ -89,15 +89,34 @@ moneySmartz2/
 │   └── tasks.md         # Development tasks and roadmap
 ├── moneySmartz/
 │   ├── screens/         # Screen classes organized by category
+│   │   ├── base_screens.py      # Basic UI screens (title, name input, etc.)
+│   │   ├── financial_screens.py # Banking and financial management screens
+│   │   ├── game_screen.py       # Main game screen
+│   │   ├── life_event_screens.py # Life milestone screens
+│   │   └── random_event_screens.py # Random event screens
 │   ├── __init__.py      # Package initialization
+│   ├── assets.py        # Asset path management
 │   ├── constants.py     # Game constants and configuration
 │   ├── game.py          # Game logic (controller)
 │   ├── models.py        # Data models
 │   └── ui.py            # UI components
+├── build_and_run.bat    # Automated build and run script
 ├── main.py              # Entry point
 ├── moneySmartz.py       # Legacy monolithic file (being migrated)
+├── setup.py             # Build configuration
+├── test_life_events.py  # Test script for life events
+├── verify_fix.py        # Verification script for recent fixes
 └── README.md            # This file
 ```
+
+## Recent Updates
+
+### Latest Improvements
+- **Fixed Life Events GUI Display**: Life events now properly display in the graphical interface instead of only in the console
+- **Enhanced Life Event Screens**: All major life milestones (high school graduation, college graduation, job opportunities, car purchase) now have fully functional GUI screens
+- **Added Test Scripts**: Created comprehensive test scripts to verify functionality and prevent regressions
+- **Improved Asset Management**: Added proper asset path management for better resource handling
+- **Updated Documentation**: README now reflects current project state and structure
 
 ## Development Status
 
@@ -107,9 +126,22 @@ This project is under active development. Current progress:
 - ✅ Modular architecture started
 - ✅ MVC pattern partially implemented
 - ✅ Custom graphics implemented for all main screens
+- ✅ Life events GUI screens fully implemented and working
+- ✅ All major life milestones display properly in GUI (high school graduation, college graduation, job opportunities, car purchase, etc.)
+- ✅ Test scripts created for verification and quality assurance
 - 🔄 Migration from monolithic to modular structure in progress
 - 📝 Documentation improvements ongoing
 - 🚧 Many features planned (see `docs/tasks.md`)
+
+## Testing
+
+The project includes test scripts to verify functionality:
+
+### Running Tests
+- **Life Events Test**: `python test_life_events.py` - Tests that life events trigger GUI screens properly
+- **Fix Verification**: `python verify_fix.py` - Verifies that recent fixes are working correctly
+
+These scripts help ensure that the game's core functionality works as expected and can be used during development to catch regressions.
 
 ## How to Contribute
 
@@ -121,6 +153,11 @@ Contributions are welcome! Here's how you can help:
 4. Commit your changes (`git commit -m 'Add some amazing feature'`)
 5. Push to the branch (`git push origin feature/amazing-feature`)
 6. Open a Pull Request
+
+### Before Contributing
+- Run the test scripts to ensure your changes don't break existing functionality
+- Test the game thoroughly by playing through different scenarios
+- Follow the existing code structure and naming conventions
 
 ## Tips for Success
 

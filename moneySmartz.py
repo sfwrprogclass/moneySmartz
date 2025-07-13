@@ -3280,23 +3280,26 @@ class Game:
         """Check for life stage events and show appropriate screens (GUI version)."""
         # High school graduation
         if self.player.age == 18 and self.player.education == "High School":
-            # Will be implemented with a HighSchoolGraduationScreen
-            pass
+            from moneySmartz.screens.life_event_screens import HighSchoolGraduationScreen
+            self.gui_manager.set_screen(HighSchoolGraduationScreen(self))
+            return True
 
         # College graduation (if went to college)
         elif self.player.age == 22 and self.player.education == "College (In Progress)":
-            # Will be implemented with a CollegeGraduationScreen
-            pass
+            from moneySmartz.screens.life_event_screens import CollegeGraduationScreen
+            self.gui_manager.set_screen(CollegeGraduationScreen(self))
+            return True
 
         # First full-time job opportunity
         elif self.player.age == 22 and not self.player.job and self.player.education != "College (In Progress)":
-            # Will be implemented with a JobOpportunityScreen
-            pass
+            self.gui_manager.set_screen(JobSearchScreen(self))
+            return True
 
         # Car purchase opportunity
         elif self.player.age == 20 and not any(a.asset_type == "Car" for a in self.player.assets):
-            # Will be implemented with a CarPurchaseScreen
-            pass
+            from moneySmartz.screens.life_event_screens import CarPurchaseScreen
+            self.gui_manager.set_screen(CarPurchaseScreen(self))
+            return True
 
         # House purchase opportunity
         elif self.player.age == 30 and not any(a.asset_type == "House" for a in self.player.assets) and self.player.job:

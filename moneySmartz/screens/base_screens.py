@@ -1,4 +1,6 @@
 import pygame
+from moneySmartz.constants import *
+from moneySmartz.assets import ASSETS_PATH
 import random
 import os
 from pygame.locals import *
