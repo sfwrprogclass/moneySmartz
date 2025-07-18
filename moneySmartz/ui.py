@@ -1,18 +1,28 @@
 import pygame
+import os
 from pygame.locals import *
 from moneySmartz.constants import *
+from moneySmartz.sound_manager import SoundManager
 
 class Button:
     """
     A button UI element that can be clicked to trigger an action.
     """
-    def __init__(self, x, y, width, height, text, color=BLUE, hover_color=LIGHT_BLUE, text_color=WHITE, font_size=FONT_MEDIUM, action=None):
+    def __init__(self, x, y, width, height, text, color=BLUE, hover_color=LIGHT_BLUE, 
+                 text_color=WHITE, font_size=FONT_MEDIUM, font_name=None, action=None):
         self.rect = pygame.Rect(x, y, width, height)
         self.text = text
         self.color = color
         self.hover_color = hover_color
         self.text_color = text_color
-        self.font = pygame.font.SysFont('Arial', font_size)
+        # Use custom font if available
+        try:
+            if font_name:
+                self.font = pygame.font.Font(font_name, font_size)
+            else:
+                self.font = pygame.font.SysFont('Arial', font_size)
+        except:
+            self.font = pygame.font.SysFont('Arial', font_size)
         self.action = action
         self.hovered = False
 
@@ -37,13 +47,18 @@ class Button:
         return None
 
 class TextInput:
-    """
-    A text input field that allows the user to enter text.
-    """
-    def __init__(self, x, y, width, height, font_size=FONT_MEDIUM, max_length=20, initial_text=""):
+    def __init__(self, x, y, width, height, font_size=FONT_MEDIUM, max_length=20, 
+                 initial_text="", font_name=None):
         self.rect = pygame.Rect(x, y, width, height)
         self.text = initial_text
-        self.font = pygame.font.SysFont('Arial', font_size)
+        # Use custom font if available
+        try:
+            if font_name:
+                self.font = pygame.font.Font(font_name, font_size)
+            else:
+                self.font = pygame.font.SysFont('Arial', font_size)
+        except:
+            self.font = pygame.font.SysFont('Arial', font_size)
         self.active = False
         self.max_length = max_length
 
@@ -80,6 +95,9 @@ class Screen:
     """
     Base class for all screens in the game.
     """
+        
+    play_startup_music = False  # Class attribute to control music
+
     def __init__(self, game):
         self.game = game
         self.buttons = []
@@ -121,11 +139,37 @@ class GUIManager:
         self.clock = pygame.time.Clock()
         self.current_screen = None
         self.running = True
+        
+        # Initialize sound manager
+        self.sound_manager = SoundManager()
+        
+        # Load sounds
+        self.load_sounds()
+
+    def load_sounds(self):
+        """Load all sound assets"""
+        # Get assets path relative to project root
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        root_dir = os.path.dirname(current_dir)  # Go up to moneySmartz directory
+        assets_dir = os.path.join(root_dir, 'assets')
+        
+        # Load startup song
+        startup_song_path = os.path.join(assets_dir, 'startup_song.mp3')
+        if os.path.exists(startup_song_path):
+            self.sound_manager.load_music(startup_song_path, 'startup_song')
+        else:
+            print(f"Warning: Sound file not found at {startup_song_path}")
 
     def set_screen(self, screen):
         """Set the current screen to be displayed."""
         self.current_screen = screen
-
+        
+        # Handle music based on screen's play_startup_music attribute
+        if screen.play_startup_music:
+            self.sound_manager.play_music('startup_song')
+        else:
+            self.sound_manager.stop_music()
+            
     def run(self):
         """Run the main game loop."""
         while self.running and not self.game.game_over:
@@ -138,7 +182,7 @@ class GUIManager:
                 self.current_screen.handle_events(events)
                 self.current_screen.update()
                 self.current_screen.draw(self.screen)
-
+                
             pygame.display.flip()
             self.clock.tick(FPS)
 
