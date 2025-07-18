@@ -1014,3 +1014,4 @@ class FamilyPlanningScreen(Screen):
                 positions.append((x, y))
 
         return positions
+
