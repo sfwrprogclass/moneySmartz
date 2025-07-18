@@ -158,6 +158,53 @@ class GameScreen(Screen):
             )
             self.buttons.append(better_job_button)
 
+        # --- System Control Buttons ---
+        pause_button = Button(
+            SCREEN_WIDTH - 220,
+            20,
+            90, 40,
+            "Pause",
+            action=self.pause_game
+        )
+        self.buttons.append(pause_button)
+
+        play_button = Button(
+            SCREEN_WIDTH - 120,
+            20,
+            90, 40,
+            "Play",
+            action=self.play_game
+        )
+        self.buttons.append(play_button)
+
+        save_button = Button(
+            SCREEN_WIDTH - 220,
+            70,
+            90, 40,
+            "Save",
+            action=self.save_game
+        )
+        self.buttons.append(save_button)
+
+        quit_button = Button(
+            SCREEN_WIDTH - 120,
+            70,
+            90, 40,
+            "Quit",
+            action=self.quit_game
+        )
+        self.buttons.append(quit_button)
+
+        # --- Shop Button ---
+        shop_button = Button(
+            SCREEN_WIDTH - 220,
+            SCREEN_HEIGHT - 120,
+            200, 50,
+            "Shop",
+            action=self.open_shop
+        )
+        self.buttons.append(shop_button)
+
     def continue_to_next_month(self):
         """Continue to the next month."""
         # Increment month
@@ -255,6 +302,30 @@ class GameScreen(Screen):
         """Look for a job or a better job."""
         from moneySmartz.screens.financial_screens import JobSearchScreen
         self.game.gui_manager.set_screen(JobSearchScreen(self.game))
+
+    def open_shop(self):
+        """Open the shop screen."""
+        from moneySmartz.screens.shop_screen import ShopScreen
+        self.game.gui_manager.set_screen(ShopScreen(self.game))
+
+    def pause_game(self):
+        """Pause the game (stops updates, disables actions)."""
+        self.game.paused = True
+        # Optionally, show a pause overlay or message
+
+    def play_game(self):
+        """Resume the game from pause."""
+        self.game.paused = False
+        # Optionally, hide pause overlay or message
+
+    def save_game(self):
+        """Save the current game state."""
+        self.game.save_state()
+        # Optionally, show a 'Game Saved' message
+
+    def quit_game(self):
+        """Quit the game and return to main menu or exit."""
+        self.game.quit()
 
     def draw(self, surface):
         """Draw the game screen."""
@@ -362,4 +433,3 @@ class GameScreen(Screen):
         font = pygame.font.SysFont('Arial', FONT_LARGE if is_title else FONT_MEDIUM)
         text_surface = font.render(text, True, BLACK)
         surface.blit(text_surface, (x, y))
-

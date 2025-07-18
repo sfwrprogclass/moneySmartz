@@ -47,19 +47,32 @@ class TitleScreen(Screen):
         # Buttons with custom font
         start_button = Button(
             SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 50,
-            200, 50, "Start New Game", 
+            200, 50, "Start New Game",
             font_name=button_font,
-            action=self.start_new_game
+            action=self.confirm_start_new_game
         )
-
+        load_button = Button(
+            SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 110,
+            200, 50, "Load Game",
+            font_name=button_font,
+            action=self.load_game
+        )
+        save_button = Button(
+            SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 170,
+            200, 50, "Save Game",
+            font_name=button_font,
+            action=self.save_game
+        )
         quit_button = Button(
-            SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 120,
+            SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 230,
             200, 50, "Quit",
             font_name=button_font,
-            action=self.quit_game
+            action=self.confirm_quit_game
         )
-
-        self.buttons = [start_button, quit_button]
+        self.buttons = [start_button, load_button, save_button, quit_button]
+        self.show_confirm = False
+        self.confirm_action = None
+        self.confirm_message = ""
 
         # Background image
         try:
@@ -102,6 +115,41 @@ class TitleScreen(Screen):
     def quit_game(self):
         """Quit the game."""
         self.game.gui_manager.running = False
+
+    def confirm_start_new_game(self):
+        if self.game.player is not None:
+            self.show_confirm = True
+            self.confirm_action = self.start_new_game
+            self.confirm_message = "Start a new game? Unsaved progress will be lost. Continue?"
+        else:
+            self.start_new_game()
+
+    def confirm_quit_game(self):
+        self.show_confirm = True
+        self.confirm_action = self.quit_game
+        self.confirm_message = "Are you sure you want to quit? Unsaved progress will be lost."
+
+    def save_game(self):
+        try:
+            self.game.save_state()
+            self.confirm_message = "Game saved successfully!"
+        except Exception as e:
+            self.confirm_message = f"Save failed: {e}"
+        self.show_confirm = True
+        self.confirm_action = None
+
+    def load_game(self):
+        import pickle
+        try:
+            with open("savegame.dat", "rb") as f:
+                loaded_game = pickle.load(f)
+                # Copy loaded state into current game
+                self.game.__dict__.update(loaded_game.__dict__)
+            self.confirm_message = "Game loaded successfully!"
+        except Exception as e:
+            self.confirm_message = f"Load failed: {e}"
+        self.show_confirm = True
+        self.confirm_action = None
 
     def update(self):
         """Update the title animation."""
@@ -192,8 +240,44 @@ class TitleScreen(Screen):
 
         # Draw buttons
         for button in self.buttons:
+            # Disable save if no game in progress
+            if button.text == "Save Game" and self.game.player is None:
+                continue
             button.draw(surface)
-            
+        # Draw confirmation dialog if needed
+        if self.show_confirm:
+            self.draw_confirm_dialog(surface)
+
+    def draw_confirm_dialog(self, surface):
+        # Simple modal dialog in the center
+        dialog_width, dialog_height = 400, 180
+        dialog_x = (SCREEN_WIDTH - dialog_width) // 2
+        dialog_y = (SCREEN_HEIGHT - dialog_height) // 2
+        pygame.draw.rect(surface, LIGHT_BLUE, (dialog_x, dialog_y, dialog_width, dialog_height))
+        pygame.draw.rect(surface, BLACK, (dialog_x, dialog_y, dialog_width, dialog_height), 2)
+        font = pygame.font.SysFont('Arial', FONT_LARGE)
+        text_surface = font.render(self.confirm_message, True, BLACK)
+        text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 20))
+        surface.blit(text_surface, text_rect)
+        # Yes/No buttons
+        yes_button = Button(dialog_x + 50, dialog_y + 110, 120, 40, "Yes", action=self.confirm_yes)
+        no_button = Button(dialog_x + 230, dialog_y + 110, 120, 40, "No", action=self.confirm_no)
+        yes_button.draw(surface)
+        no_button.draw(surface)
+        self.confirm_buttons = [yes_button, no_button]
+
+    def confirm_yes(self):
+        if self.confirm_action:
+            self.confirm_action()
+        self.show_confirm = False
+        self.confirm_action = None
+        self.confirm_message = ""
+
+    def confirm_no(self):
+        self.show_confirm = False
+        self.confirm_action = None
+        self.confirm_message = ""
+
 class NameInputScreen(Screen):
     play_startup_music = True  # Enable music for this screen
     
@@ -725,4 +809,3 @@ class EndGameScreen(Screen):
         # Draw buttons
         for button in self.buttons:
             button.draw(surface)
-

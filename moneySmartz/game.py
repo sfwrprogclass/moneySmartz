@@ -16,6 +16,7 @@ class Game:
         self.game_over = False
         self.events = self.initialize_events()
         self.gui_manager = None  # Will be set by the main script
+        self.paused = False  # Track paused state
 
     def initialize_events(self):
         """Initialize the random events that can occur during gameplay."""
@@ -178,6 +179,41 @@ class Game:
             print("You couldn't afford your living expenses this month!")
             # For now, just reduce credit score
             self.player.credit_score -= 20
+
+        # --- Process recurring bills (from items) ---
+        for bill in self.player.recurring_bills:
+            paid = False
+            # Try to pay from bank account or credit card if specified
+            if bill.get('source') == 'bank_or_credit':
+                if self.player.bank_account and self.player.bank_account.balance >= bill['amount']:
+                    self.player.bank_account.withdraw(bill['amount'])
+                    paid = True
+                elif self.player.credit_card and (self.player.credit_card.balance + bill['amount']) <= self.player.credit_card.limit:
+                    self.player.credit_card.charge(bill['amount'])
+                    paid = True
+            # Fallback to cash
+            if not paid and self.player.cash >= bill['amount']:
+                self.player.cash -= bill['amount']
+                paid = True
+            if not paid:
+                self.player.credit_score -= 10  # Penalty for missed bill
+                print(f"Missed recurring bill: {bill['name']}")
+
+        # --- Process utility bills ---
+        for util in self.player.utility_bills:
+            paid = False
+            if self.player.bank_account and self.player.bank_account.balance >= util['amount']:
+                self.player.bank_account.withdraw(util['amount'])
+                paid = True
+            elif self.player.credit_card and (self.player.credit_card.balance + util['amount']) <= self.player.credit_card.limit:
+                self.player.credit_card.charge(util['amount'])
+                paid = True
+            if not paid and self.player.cash >= util['amount']:
+                self.player.cash -= util['amount']
+                paid = True
+            if not paid:
+                self.player.credit_score -= 5  # Penalty for missed utility
+                print(f"Missed utility bill: {util['name']}")
 
     def trigger_random_event(self):
         """Trigger a random financial event."""
@@ -1506,3 +1542,24 @@ class Game:
 
         return False
 
+    def pause_game(self):
+        """Pause the game (for GUI mode)."""
+        self.paused = True
+
+    def play_game(self):
+        """Resume the game from pause (for GUI mode)."""
+        self.paused = False
+
+    def save_state(self, filename="savegame.dat"):
+        """Save the current game state to a file."""
+        import pickle
+        with open(filename, "wb") as f:
+            pickle.dump(self, f)
+
+    def quit(self):
+        """Quit the game (for GUI mode)."""
+        import sys
+        self.game_over = True
+        if self.gui_manager:
+            self.gui_manager.running = False
+        sys.exit()

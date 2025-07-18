@@ -19,6 +19,13 @@ class Player:
         self.loans = []
         self.assets = []
         self.family = []  # List of family members (spouse, children)
+        self.inventory = []  # List of purchased items
+        self.recurring_bills = []  # List of dicts: {name, amount, source}
+        self.utility_bills = [
+            {"name": "Electricity", "amount": 60},
+            {"name": "Water", "amount": 30},
+            {"name": "Internet", "amount": 50}
+        ]
 
 class BankAccount:
     """
