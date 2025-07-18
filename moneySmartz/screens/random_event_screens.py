@@ -4,10 +4,7 @@ from moneySmartz.constants import *
 from moneySmartz.ui import Screen, Button
 
 class RandomEventScreen(Screen):
-    """
-    Screen displayed when a random event occurs during gameplay.
-    Shows the event details and its financial impact on the player.
-    """
+    """Screen displayed when a random event occurs during gameplay."""
     def __init__(self, game, event, cash_effect):
         super().__init__(game)
         self.event = event
@@ -42,10 +39,15 @@ class RandomEventScreen(Screen):
             SCREEN_HEIGHT - 100, 
             200, 60, 
             "Continue", 
-            action=lambda: self.game.gui_manager.set_screen(self.game.gui_manager.current_screen)
+            action=self.continue_game
         )
         
         self.buttons = [continue_button]
+    
+    def continue_game(self):
+        """Return to the game screen."""
+        from moneySmartz.screens.game_screen import GameScreen
+        self.game.gui_manager.set_screen(GameScreen(self.game))
     
     def draw(self, surface):
         """Draw the random event screen."""
