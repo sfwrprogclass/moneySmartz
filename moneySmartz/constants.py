@@ -1,3 +1,11 @@
+# Assets
+PIXEL_FONT = "pixelated_font.ttf"  # Name of your font file
+TITLE_IMAGE = "title_moneysmartz.png"  # Title image file name
+
+#Gold Coin
+GOLD = (212, 175, 55)
+DARK_GOLD = (150, 120, 40)
+
 # GUI Constants
 SCREEN_WIDTH = 1024
 SCREEN_HEIGHT = 768
