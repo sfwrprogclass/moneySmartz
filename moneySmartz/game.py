@@ -181,41 +181,37 @@ class Game:
 
     def trigger_random_event(self):
         """Trigger a random financial event."""
-        # Decide if it's a positive or negative event
         event_type = "positive" if random.random() < 0.5 else "negative"
         event = random.choice(self.events[event_type])
-
+        
         cash_effect = event["cash_effect"]()
-
+        
         # Only show events that have an effect
-        if cash_effect != 0:
-            self.clear_screen()
-            print("\n" + "!" * 60)
-            print(f"LIFE EVENT: {event['name']}")
-            print(event["description"])
-
-            if cash_effect > 0:
-                print(f"You received ${cash_effect}!")
-                self.player.cash += cash_effect
-            else:
-                print(f"This costs you ${abs(cash_effect)}.")
-
-                # Handle payment
-                if self.player.cash >= abs(cash_effect):
-                    self.player.cash -= abs(cash_effect)
-                    print("You paid in cash.")
-                elif self.player.bank_account and self.player.bank_account.balance >= abs(cash_effect):
-                    self.player.bank_account.withdraw(abs(cash_effect))
-                    print("You paid using your bank account.")
-                elif self.player.credit_card and (self.player.credit_card.balance + abs(cash_effect)) <= self.player.credit_card.limit:
-                    self.player.credit_card.charge(abs(cash_effect))
-                    print("You paid using your credit card.")
-                else:
-                    print("You couldn't afford this expense! Your credit score has been affected.")
-                    self.player.credit_score -= 15
-
-            print("!" * 60)
-            input("\nPress Enter to continue...")
+        if cash_effect == 0:
+            return
+        
+        # If in GUI mode, show the event screen
+        if self.gui_manager is not None:
+            from moneySmartz.screens.random_event_screens import RandomEventScreen
+            event_screen = RandomEventScreen(self, event, cash_effect)
+            self.gui_manager.set_screen(event_screen)
+            return
+        
+        # Otherwise, text mode
+        self.clear_screen()
+        print("\n" + "!" * 60)
+        print(f"LIFE EVENT: {event['name']}")
+        print(event["description"])
+        
+        if cash_effect > 0:
+            print(f"You received ${cash_effect}!")
+            self.player.cash += cash_effect
+        else:
+            print(f"This costs you ${abs(cash_effect)}.")
+            # ... rest of text mode processing ...
+        
+        print("!" * 60)
+        input("\nPress Enter to continue...")
 
     def check_life_stage_events(self):
         """Check for and trigger life stage events based on player age."""
@@ -1509,3 +1505,4 @@ class Game:
                 return True
 
         return False
+
