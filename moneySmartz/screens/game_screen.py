@@ -8,6 +8,8 @@ class GameScreen(Screen):
     """
     The main game screen that shows the player's status and allows them to take actions.
     """
+    play_startup_music = False  # Disable music for this screen
+    
     def __init__(self, game):
         super().__init__(game)
         self.create_buttons()
@@ -164,25 +166,27 @@ class GameScreen(Screen):
             self.game.current_month = 1
             self.game.current_year += 1
             self.game.player.age += 1
-
+            
             # Apply interest to savings
             if self.game.player.bank_account and self.game.player.bank_account.account_type == "Savings":
                 self.game.player.bank_account.apply_interest()
-
+            
             # Age assets
             for asset in self.game.player.assets:
                 asset.age_asset()
-
+        
         # Process monthly finances
         self.game.process_monthly_finances()
-
+        
         # Random events
         if random.random() < 0.3:  # 30% chance of an event each month
             self.game.trigger_random_event()
-
+            # Don't proceed further until event is handled
+            return
+        
         # Life stage events based on age
         life_event_triggered = self.game.check_life_stage_events_gui()
-
+        
         # If no life event was triggered, refresh the game screen
         if not life_event_triggered:
             # Check game over conditions
@@ -358,3 +362,4 @@ class GameScreen(Screen):
         font = pygame.font.SysFont('Arial', FONT_LARGE if is_title else FONT_MEDIUM)
         text_surface = font.render(text, True, BLACK)
         surface.blit(text_surface, (x, y))
+
