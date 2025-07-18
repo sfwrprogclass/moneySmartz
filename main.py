@@ -7,6 +7,8 @@ It initializes the game and starts the main game loop.
 
 import pygame
 import sys
+import os
+import traceback
 from moneySmartz import Game, GUIManager
 from moneySmartz.screens import TitleScreen
 
@@ -17,6 +19,7 @@ def main():
     # Initialize pygame
     pygame.init()
     pygame.font.init()
+    pygame.mixer.init()  # Initialize mixer for sound
     
     # Create game instance
     game = Game()
@@ -33,6 +36,7 @@ def main():
         gui_manager.run()
     except Exception as e:
         print(f"Error: {e}")
+        traceback.print_exc()
     finally:
         pygame.quit()
         sys.exit()
