@@ -9,6 +9,8 @@ class BankAccountScreen(Screen):
     """
     Screen for opening a bank account.
     """
+    play_startup_music = False  # Disable music for this screen
+    
     def __init__(self, game):
         super().__init__(game)
 
@@ -151,6 +153,8 @@ class BankDetailsScreen(Screen):
     """
     Screen for viewing bank account details.
     """
+    play_startup_music = False  # Disable music for this screen
+    
     def __init__(self, game):
         super().__init__(game)
 
@@ -286,6 +290,8 @@ class DepositScreen(Screen):
     """
     Screen for depositing money to a bank account.
     """
+    play_startup_music = False  # Disable music for this screen
+    
     def __init__(self, game):
         super().__init__(game)
 
@@ -402,6 +408,8 @@ class WithdrawScreen(Screen):
     """
     Screen for withdrawing money from a bank account.
     """
+    play_startup_music = False  # Disable music for this screen
+    
     def __init__(self, game):
         super().__init__(game)
 
@@ -518,6 +526,8 @@ class GetDebitCardScreen(Screen):
     """
     Screen for getting a debit card.
     """
+    play_startup_music = False  # Disable music for this screen
+    
     def __init__(self, game):
         super().__init__(game)
 
@@ -607,6 +617,8 @@ class CreditCardScreen(Screen):
     """
     Screen for applying for a credit card.
     """
+    play_startup_music = False  # Disable music for this screen
+    
     def __init__(self, game):
         super().__init__(game)
         self.font = pygame.font.SysFont('Arial', FONT_MEDIUM)
@@ -775,6 +787,8 @@ class CreditCardDetailsScreen(Screen):
     """
     Screen for viewing credit card details.
     """
+    play_startup_music = False  # Disable music for this screen
+    
     def __init__(self, game):
         super().__init__(game)
         self.buttons = [Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT - 80, 200, 50, "Back", action=self.go_back)]
@@ -791,6 +805,8 @@ class PayCreditCardScreen(Screen):
     """
     Screen for paying a credit card.
     """
+    play_startup_music = False  # Disable music for this screen
+    
     def __init__(self, game):
         super().__init__(game)
         self.buttons = [Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT - 80, 200, 50, "Back", action=self.go_back)]
@@ -807,6 +823,8 @@ class LoanDetailsScreen(Screen):
     """
     Screen for viewing loan details.
     """
+    play_startup_music = False  # Disable music for this screen
+    
     def __init__(self, game):
         super().__init__(game)
         self.buttons = [Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT - 80, 200, 50, "Back", action=self.go_back)]
@@ -823,6 +841,8 @@ class ExtraLoanPaymentScreen(Screen):
     """
     Screen for making an extra loan payment.
     """
+    play_startup_music = False  # Disable music for this screen
+    
     def __init__(self, game):
         super().__init__(game)
         self.buttons = [Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT - 80, 200, 50, "Back", action=self.go_back)]
@@ -839,6 +859,8 @@ class AssetDetailsScreen(Screen):
     """
     Screen for viewing asset details.
     """
+    play_startup_music = False  # Disable music for this screen
+    
     def __init__(self, game):
         super().__init__(game)
         self.buttons = [Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT - 80, 200, 50, "Back", action=self.go_back)]
@@ -855,6 +877,8 @@ class JobSearchScreen(Screen):
     """
     Screen for searching for a job.
     """
+    play_startup_music = False  # Disable music for this screen
+    
     def __init__(self, game):
         super().__init__(game)
 
@@ -1048,3 +1072,4 @@ class JobSearchScreen(Screen):
         # Draw buttons
         for button in self.buttons:
             button.draw(surface)
+
