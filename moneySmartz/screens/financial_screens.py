@@ -777,7 +777,64 @@ class CreditCardDetailsScreen(Screen):
     """
     def __init__(self, game):
         super().__init__(game)
-        self.buttons = [Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT - 80, 200, 50, "Back", action=self.go_back)]
+        
+        # Title and fonts
+        self.title_font = pygame.font.SysFont('Arial', FONT_LARGE)
+        self.text_font = pygame.font.SysFont('Arial', FONT_MEDIUM)
+        self.small_font = pygame.font.SysFont('Arial', FONT_SMALL)
+        
+        # Transaction history scroll
+        self.scroll_position = 0
+        self.max_visible_transactions = 8
+        
+        # Buttons
+        back_button = Button(
+            SCREEN_WIDTH // 2 - 220, 
+            SCREEN_HEIGHT - 80, 
+            200, 50, 
+            "Back", 
+            action=self.go_back
+        )
+        
+        pay_button = Button(
+            SCREEN_WIDTH // 2 + 20, 
+            SCREEN_HEIGHT - 80, 
+            200, 50, 
+            "Make Payment", 
+            action=self.make_payment
+        )
+        
+        scroll_up_button = Button(
+            SCREEN_WIDTH - 80, 
+            200, 
+            60, 30, 
+            "▲", 
+            action=self.scroll_up
+        )
+        
+        scroll_down_button = Button(
+            SCREEN_WIDTH - 80, 
+            SCREEN_HEIGHT - 200, 
+            60, 30, 
+            "▼", 
+            action=self.scroll_down
+        )
+        
+        self.buttons = [back_button, pay_button, scroll_up_button, scroll_down_button]
+
+    def scroll_up(self):
+        """Scroll transaction history up."""
+        if self.scroll_position > 0:
+            self.scroll_position -= 1
+
+    def scroll_down(self):
+        """Scroll transaction history down."""
+        if self.scroll_position < max(0, len(self.game.player.credit_card.transaction_history) - self.max_visible_transactions):
+            self.scroll_position += 1
+
+    def make_payment(self):
+        """Navigate to the payment screen."""
+        self.game.gui_manager.set_screen(PayCreditCardScreen(self.game))
 
     def go_back(self):
         from moneySmartz.screens.game_screen import GameScreen
@@ -785,7 +842,91 @@ class CreditCardDetailsScreen(Screen):
 
     def draw(self, surface):
         surface.fill(WHITE)
-        # This would be implemented with credit card details display
+        
+        # Title
+        title_surface = self.title_font.render("Credit Card Details", True, BLACK)
+        title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, 50))
+        surface.blit(title_surface, title_rect)
+        
+        # Credit card visual
+        card_rect = pygame.Rect(50, 100, 300, 180)
+        pygame.draw.rect(surface, PURPLE, card_rect)
+        pygame.draw.rect(surface, BLACK, card_rect, 2)  # Border
+        
+        # Card text
+        card_title = self.text_font.render("CREDIT CARD", True, WHITE)
+        card_title_rect = card_title.get_rect(center=(card_rect.centerx, card_rect.top + 30))
+        surface.blit(card_title, card_title_rect)
+        
+        card_name = self.text_font.render(self.game.player.name, True, WHITE)
+        card_name_rect = card_name.get_rect(center=(card_rect.centerx, card_rect.top + 80))
+        surface.blit(card_name, card_name_rect)
+        
+        card_number = self.text_font.render("**** **** **** 1234", True, WHITE)
+        card_number_rect = card_number.get_rect(center=(card_rect.centerx, card_rect.top + 120))
+        surface.blit(card_number, card_number_rect)
+        
+        limit_text = self.small_font.render(f"Limit: ${self.game.player.credit_card.limit:.2f}", True, WHITE)
+        limit_rect = limit_text.get_rect(center=(card_rect.centerx, card_rect.top + 150))
+        surface.blit(limit_text, limit_rect)
+        
+        # Account information
+        info_x = 380
+        info_y = 120
+        
+        info_lines = [
+            f"Credit Limit: ${self.game.player.credit_card.limit:.2f}",
+            f"Current Balance: ${self.game.player.credit_card.balance:.2f}",
+            f"Available Credit: ${self.game.player.credit_card.limit - self.game.player.credit_card.balance:.2f}"
+        ]
+        
+        # Add minimum payment if there's a balance
+        if self.game.player.credit_card.balance > 0:
+            min_payment = max(25, self.game.player.credit_card.balance * 0.03)
+            info_lines.append(f"Minimum Payment: ${min_payment:.2f}")
+        
+        for i, line in enumerate(info_lines):
+            color = RED if "Balance:" in line and self.game.player.credit_card.balance > 0 else BLACK
+            text_surface = self.text_font.render(line, True, color)
+            surface.blit(text_surface, (info_x, info_y + i * 35))
+        
+        # Transaction history
+        history_title = self.text_font.render("Transaction History:", True, BLACK)
+        surface.blit(history_title, (50, 300))
+        
+        # Transaction history area
+        history_rect = pygame.Rect(50, 330, SCREEN_WIDTH - 150, 250)
+        pygame.draw.rect(surface, LIGHT_GRAY, history_rect)
+        pygame.draw.rect(surface, BLACK, history_rect, 2)
+        
+        # Display transactions
+        if self.game.player.credit_card.transaction_history:
+            visible_transactions = self.game.player.credit_card.transaction_history[
+                self.scroll_position:self.scroll_position + self.max_visible_transactions
+            ]
+            
+            for i, transaction in enumerate(visible_transactions):
+                y_pos = 345 + i * 30
+                if transaction["type"] == "charge":
+                    text = f"Charge: ${transaction['amount']:.2f}"
+                    color = RED
+                elif transaction["type"] == "payment":
+                    text = f"Payment: -${transaction['amount']:.2f}"
+                    color = GREEN
+                else:
+                    text = f"{transaction['type']}: ${transaction['amount']:.2f}"
+                    color = BLACK
+                
+                text_surface = self.small_font.render(text, True, color)
+                surface.blit(text_surface, (60, y_pos))
+        else:
+            no_transactions = self.text_font.render("No transactions yet.", True, BLACK)
+            no_transactions_rect = no_transactions.get_rect(center=(history_rect.centerx, history_rect.centery))
+            surface.blit(no_transactions, no_transactions_rect)
+        
+        # Draw buttons
+        for button in self.buttons:
+            button.draw(surface)
 
 class PayCreditCardScreen(Screen):
     """
@@ -793,15 +934,180 @@ class PayCreditCardScreen(Screen):
     """
     def __init__(self, game):
         super().__init__(game)
-        self.buttons = [Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT - 80, 200, 50, "Back", action=self.go_back)]
+        
+        # Title and fonts
+        self.title_font = pygame.font.SysFont('Arial', FONT_LARGE)
+        self.text_font = pygame.font.SysFont('Arial', FONT_MEDIUM)
+        
+        # Calculate minimum payment
+        self.min_payment = max(25, self.game.player.credit_card.balance * 0.03)
+        
+        # Amount input
+        self.amount_input = TextInput(
+            SCREEN_WIDTH // 2 - 150,
+            SCREEN_HEIGHT // 2 + 50,
+            300, 40,
+            font_size=FONT_MEDIUM,
+            max_length=10
+        )
+        
+        # Status message
+        self.status_message = ""
+        self.status_color = BLACK
+        
+        # Buttons
+        min_payment_button = Button(
+            SCREEN_WIDTH // 2 - 320,
+            SCREEN_HEIGHT // 2 - 20,
+            200, 50,
+            f"Pay Minimum (${self.min_payment:.2f})",
+            color=BLUE,
+            hover_color=LIGHT_BLUE,
+            action=self.pay_minimum
+        )
+        
+        full_payment_button = Button(
+            SCREEN_WIDTH // 2 - 100,
+            SCREEN_HEIGHT // 2 - 20,
+            200, 50,
+            f"Pay Full (${self.game.player.credit_card.balance:.2f})",
+            color=GREEN,
+            hover_color=LIGHT_GREEN,
+            action=self.pay_full
+        )
+        
+        custom_payment_button = Button(
+            SCREEN_WIDTH // 2 + 120,
+            SCREEN_HEIGHT // 2 - 20,
+            200, 50,
+            "Pay Custom Amount",
+            action=self.pay_custom
+        )
+        
+        back_button = Button(
+            SCREEN_WIDTH // 2 - 100,
+            SCREEN_HEIGHT - 80,
+            200, 50,
+            "Back",
+            action=self.go_back
+        )
+        
+        self.buttons = [min_payment_button, full_payment_button, custom_payment_button, back_button]
+
+    def pay_minimum(self):
+        """Pay the minimum payment amount."""
+        self.make_payment(self.min_payment)
+
+    def pay_full(self):
+        """Pay the full balance."""
+        self.make_payment(self.game.player.credit_card.balance)
+
+    def pay_custom(self):
+        """Pay a custom amount from the input field."""
+        try:
+            amount = float(self.amount_input.text)
+            if amount <= 0:
+                self.status_message = "Please enter a positive amount."
+                self.status_color = RED
+                return
+            if amount < self.min_payment:
+                self.status_message = f"Payment must be at least ${self.min_payment:.2f}."
+                self.status_color = RED
+                return
+            if amount > self.game.player.credit_card.balance:
+                self.status_message = f"Payment cannot exceed balance of ${self.game.player.credit_card.balance:.2f}."
+                self.status_color = RED
+                return
+            
+            self.make_payment(amount)
+            self.amount_input.text = ""  # Clear input after successful payment
+        except ValueError:
+            self.status_message = "Please enter a valid number."
+            self.status_color = RED
+
+    def make_payment(self, amount):
+        """Make a payment using available funds."""
+        # Try to pay from cash first
+        if self.game.player.cash >= amount:
+            self.game.player.cash -= amount
+            self.game.player.credit_card.pay(amount)
+            self.status_message = f"Payment of ${amount:.2f} made successfully from cash."
+            self.status_color = GREEN
+            
+            # Update credit score for on-time payment
+            self.game.player.credit_score += 2
+            
+        # Try to pay from bank account
+        elif self.game.player.bank_account and self.game.player.bank_account.balance >= amount:
+            self.game.player.bank_account.withdraw(amount)
+            self.game.player.credit_card.pay(amount)
+            self.status_message = f"Payment of ${amount:.2f} made successfully from bank account."
+            self.status_color = GREEN
+            
+            # Update credit score for on-time payment
+            self.game.player.credit_score += 2
+            
+        else:
+            available_funds = self.game.player.cash
+            if self.game.player.bank_account:
+                available_funds += self.game.player.bank_account.balance
+            
+            self.status_message = f"Insufficient funds. You have ${available_funds:.2f} available."
+            self.status_color = RED
 
     def go_back(self):
-        from moneySmartz.screens.game_screen import GameScreen
-        self.game.gui_manager.set_screen(GameScreen(self.game))
+        from moneySmartz.screens.financial_screens import CreditCardDetailsScreen
+        self.game.gui_manager.set_screen(CreditCardDetailsScreen(self.game))
+
+    def handle_events(self, events):
+        """Handle pygame events."""
+        super().handle_events(events)
+        self.amount_input.update(events)
 
     def draw(self, surface):
         surface.fill(WHITE)
-        # This would be implemented with credit card payment logic
+        
+        # Title
+        title_surface = self.title_font.render("Pay Credit Card", True, BLACK)
+        title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, 50))
+        surface.blit(title_surface, title_rect)
+        
+        # Current balance info
+        balance_info = [
+            f"Current Balance: ${self.game.player.credit_card.balance:.2f}",
+            f"Credit Limit: ${self.game.player.credit_card.limit:.2f}",
+            f"Minimum Payment: ${self.min_payment:.2f}",
+            "",
+            f"Available Cash: ${self.game.player.cash:.2f}"
+        ]
+        
+        if self.game.player.bank_account:
+            balance_info.append(f"Bank Balance: ${self.game.player.bank_account.balance:.2f}")
+        
+        for i, line in enumerate(balance_info):
+            if line:  # Skip empty lines
+                color = RED if "Current Balance:" in line else BLACK
+                text_surface = self.text_font.render(line, True, color)
+                text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, 100 + i * 30))
+                surface.blit(text_surface, text_rect)
+        
+        # Custom amount input label
+        custom_label = self.text_font.render("Custom Amount:", True, BLACK)
+        custom_label_rect = custom_label.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 20))
+        surface.blit(custom_label, custom_label_rect)
+        
+        # Draw amount input
+        self.amount_input.draw(surface)
+        
+        # Status message
+        if self.status_message:
+            status_surface = self.text_font.render(self.status_message, True, self.status_color)
+            status_rect = status_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 120))
+            surface.blit(status_surface, status_rect)
+        
+        # Draw buttons
+        for button in self.buttons:
+            button.draw(surface)
 
 class LoanDetailsScreen(Screen):
     """
@@ -809,7 +1115,34 @@ class LoanDetailsScreen(Screen):
     """
     def __init__(self, game):
         super().__init__(game)
-        self.buttons = [Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT - 80, 200, 50, "Back", action=self.go_back)]
+        
+        # Title and fonts
+        self.title_font = pygame.font.SysFont('Arial', FONT_LARGE)
+        self.text_font = pygame.font.SysFont('Arial', FONT_MEDIUM)
+        self.small_font = pygame.font.SysFont('Arial', FONT_SMALL)
+        
+        # Buttons
+        back_button = Button(
+            SCREEN_WIDTH // 2 - 220,
+            SCREEN_HEIGHT - 80,
+            200, 50,
+            "Back",
+            action=self.go_back
+        )
+        
+        extra_payment_button = Button(
+            SCREEN_WIDTH // 2 + 20,
+            SCREEN_HEIGHT - 80,
+            200, 50,
+            "Make Extra Payment",
+            action=self.make_extra_payment
+        )
+        
+        self.buttons = [back_button, extra_payment_button]
+
+    def make_extra_payment(self):
+        """Navigate to extra payment screen."""
+        self.game.gui_manager.set_screen(ExtraLoanPaymentScreen(self.game))
 
     def go_back(self):
         from moneySmartz.screens.game_screen import GameScreen
@@ -817,7 +1150,75 @@ class LoanDetailsScreen(Screen):
 
     def draw(self, surface):
         surface.fill(WHITE)
-        # This would be implemented with loan details display
+        
+        # Title
+        title_surface = self.title_font.render("Loan Details", True, BLACK)
+        title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, 50))
+        surface.blit(title_surface, title_rect)
+        
+        if not self.game.player.loans:
+            no_loans_text = self.text_font.render("You don't have any loans.", True, BLACK)
+            no_loans_rect = no_loans_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+            surface.blit(no_loans_text, no_loans_rect)
+        else:
+            # Display loan information
+            y_pos = 120
+            total_monthly_payment = 0
+            total_remaining_balance = 0
+            
+            for i, loan in enumerate(self.game.player.loans):
+                # Loan header
+                loan_header = self.text_font.render(f"{loan.loan_type} #{i+1}", True, BLUE)
+                surface.blit(loan_header, (50, y_pos))
+                y_pos += 40
+                
+                # Loan details
+                loan_details = [
+                    f"Original Amount: ${loan.original_amount:.2f}",
+                    f"Current Balance: ${loan.current_balance:.2f}",
+                    f"Interest Rate: {loan.interest_rate * 100:.1f}%",
+                    f"Monthly Payment: ${loan.monthly_payment:.2f}",
+                    f"Term: {loan.term_years} years"
+                ]
+                
+                # Calculate remaining time
+                if loan.monthly_payment > 0:
+                    remaining_months = loan.current_balance / (loan.monthly_payment - (loan.current_balance * loan.interest_rate / 12))
+                    remaining_years = remaining_months / 12
+                    loan_details.append(f"Time Remaining: {remaining_years:.1f} years")
+                
+                # Calculate total interest if paid normally
+                total_interest = (loan.monthly_payment * remaining_months) - loan.current_balance
+                loan_details.append(f"Remaining Interest: ${total_interest:.2f}")
+                
+                for detail in loan_details:
+                    color = RED if "Current Balance:" in detail else BLACK
+                    detail_surface = self.small_font.render(detail, True, color)
+                    surface.blit(detail_surface, (80, y_pos))
+                    y_pos += 25
+                
+                y_pos += 20  # Space between loans
+                total_monthly_payment += loan.monthly_payment
+                total_remaining_balance += loan.current_balance
+            
+            # Summary section
+            summary_y = SCREEN_HEIGHT - 200
+            summary_title = self.text_font.render("Summary", True, BLUE)
+            surface.blit(summary_title, (50, summary_y))
+            
+            summary_details = [
+                f"Total Monthly Payments: ${total_monthly_payment:.2f}",
+                f"Total Remaining Balance: ${total_remaining_balance:.2f}"
+            ]
+            
+            for i, detail in enumerate(summary_details):
+                color = RED if total_remaining_balance > 0 else BLACK
+                detail_surface = self.text_font.render(detail, True, color)
+                surface.blit(detail_surface, (50, summary_y + 30 + i * 25))
+        
+        # Draw buttons
+        for button in self.buttons:
+            button.draw(surface)
 
 class ExtraLoanPaymentScreen(Screen):
     """
@@ -825,15 +1226,219 @@ class ExtraLoanPaymentScreen(Screen):
     """
     def __init__(self, game):
         super().__init__(game)
-        self.buttons = [Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT - 80, 200, 50, "Back", action=self.go_back)]
+        
+        # Title and fonts
+        self.title_font = pygame.font.SysFont('Arial', FONT_LARGE)
+        self.text_font = pygame.font.SysFont('Arial', FONT_MEDIUM)
+        
+        # Selected loan index
+        self.selected_loan_index = 0
+        
+        # Amount input
+        self.amount_input = TextInput(
+            SCREEN_WIDTH // 2 - 150,
+            SCREEN_HEIGHT // 2 + 100,
+            300, 40,
+            font_size=FONT_MEDIUM,
+            max_length=10
+        )
+        
+        # Status message
+        self.status_message = ""
+        self.status_color = BLACK
+        
+        # Create buttons
+        self.create_buttons()
+
+    def create_buttons(self):
+        """Create buttons for loan selection and payment."""
+        self.buttons = []
+        
+        # Loan selection buttons
+        if len(self.game.player.loans) > 1:
+            for i, loan in enumerate(self.game.player.loans):
+                color = BLUE if i == self.selected_loan_index else GRAY
+                loan_button = Button(
+                    50 + i * 200,
+                    200,
+                    180, 50,
+                    f"{loan.loan_type[:12]}...",
+                    color=color,
+                    action=lambda idx=i: self.select_loan(idx)
+                )
+                self.buttons.append(loan_button)
+        
+        # Payment button
+        pay_button = Button(
+            SCREEN_WIDTH // 2 - 100,
+            SCREEN_HEIGHT // 2 + 160,
+            200, 50,
+            "Make Payment",
+            action=self.make_payment
+        )
+        self.buttons.append(pay_button)
+        
+        # Back button
+        back_button = Button(
+            SCREEN_WIDTH // 2 - 100,
+            SCREEN_HEIGHT - 80,
+            200, 50,
+            "Back",
+            action=self.go_back
+        )
+        self.buttons.append(back_button)
+
+    def select_loan(self, index):
+        """Select a loan for payment."""
+        self.selected_loan_index = index
+        self.create_buttons()  # Refresh buttons to show selection
+
+    def make_payment(self):
+        """Make an extra payment on the selected loan."""
+        if not self.game.player.loans:
+            self.status_message = "You don't have any loans."
+            self.status_color = RED
+            return
+        
+        try:
+            amount = float(self.amount_input.text)
+            if amount <= 0:
+                self.status_message = "Please enter a positive amount."
+                self.status_color = RED
+                return
+            
+            selected_loan = self.game.player.loans[self.selected_loan_index]
+            
+            if amount > selected_loan.current_balance:
+                self.status_message = f"Payment cannot exceed loan balance of ${selected_loan.current_balance:.2f}."
+                self.status_color = RED
+                return
+            
+            # Try to pay from cash first
+            if self.game.player.cash >= amount:
+                self.game.player.cash -= amount
+                selected_loan.make_payment(amount)
+                self.status_message = f"Payment of ${amount:.2f} made successfully from cash."
+                self.status_color = GREEN
+                
+                # Check if loan is paid off
+                if selected_loan.current_balance <= 0:
+                    self.game.player.loans.remove(selected_loan)
+                    self.status_message += " Loan paid off!"
+                    self.game.player.credit_score += 10  # Credit score boost for paying off loan
+                
+            # Try to pay from bank account
+            elif self.game.player.bank_account and self.game.player.bank_account.balance >= amount:
+                self.game.player.bank_account.withdraw(amount)
+                selected_loan.make_payment(amount)
+                self.status_message = f"Payment of ${amount:.2f} made successfully from bank account."
+                self.status_color = GREEN
+                
+                # Check if loan is paid off
+                if selected_loan.current_balance <= 0:
+                    self.game.player.loans.remove(selected_loan)
+                    self.status_message += " Loan paid off!"
+                    self.game.player.credit_score += 10  # Credit score boost for paying off loan
+                
+            else:
+                available_funds = self.game.player.cash
+                if self.game.player.bank_account:
+                    available_funds += self.game.player.bank_account.balance
+                
+                self.status_message = f"Insufficient funds. You have ${available_funds:.2f} available."
+                self.status_color = RED
+            
+            # Clear input after successful payment
+            if self.status_color == GREEN:
+                self.amount_input.text = ""
+                
+        except ValueError:
+            self.status_message = "Please enter a valid number."
+            self.status_color = RED
 
     def go_back(self):
-        from moneySmartz.screens.game_screen import GameScreen
-        self.game.gui_manager.set_screen(GameScreen(self.game))
+        from moneySmartz.screens.financial_screens import LoanDetailsScreen
+        self.game.gui_manager.set_screen(LoanDetailsScreen(self.game))
+
+    def handle_events(self, events):
+        """Handle pygame events."""
+        super().handle_events(events)
+        self.amount_input.update(events)
 
     def draw(self, surface):
         surface.fill(WHITE)
-        # This would be implemented with extra loan payment logic
+        
+        # Title
+        title_surface = self.title_font.render("Make Extra Loan Payment", True, BLACK)
+        title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, 50))
+        surface.blit(title_surface, title_rect)
+        
+        if not self.game.player.loans:
+            no_loans_text = self.text_font.render("You don't have any loans.", True, BLACK)
+            no_loans_rect = no_loans_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+            surface.blit(no_loans_text, no_loans_rect)
+        else:
+            # Loan selection instruction
+            if len(self.game.player.loans) > 1:
+                instruction_text = self.text_font.render("Select the loan you want to pay:", True, BLACK)
+                instruction_rect = instruction_text.get_rect(center=(SCREEN_WIDTH // 2, 120))
+                surface.blit(instruction_text, instruction_rect)
+            
+            # Selected loan details
+            selected_loan = self.game.player.loans[self.selected_loan_index]
+            
+            loan_info = [
+                f"Selected Loan: {selected_loan.loan_type}",
+                f"Current Balance: ${selected_loan.current_balance:.2f}",
+                f"Monthly Payment: ${selected_loan.monthly_payment:.2f}",
+                f"Interest Rate: {selected_loan.interest_rate * 100:.1f}%",
+                "",
+                f"Available Cash: ${self.game.player.cash:.2f}"
+            ]
+            
+            if self.game.player.bank_account:
+                loan_info.append(f"Bank Balance: ${self.game.player.bank_account.balance:.2f}")
+            
+            for i, line in enumerate(loan_info):
+                if line:  # Skip empty lines
+                    color = RED if "Current Balance:" in line else BLACK
+                    text_surface = self.text_font.render(line, True, color)
+                    text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, 280 + i * 30))
+                    surface.blit(text_surface, text_rect)
+            
+            # Payment amount input label
+            payment_label = self.text_font.render("Extra Payment Amount:", True, BLACK)
+            payment_label_rect = payment_label.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 70))
+            surface.blit(payment_label, payment_label_rect)
+            
+            # Draw amount input
+            self.amount_input.draw(surface)
+            
+            # Benefit calculation
+            if self.amount_input.text:
+                try:
+                    extra_payment = float(self.amount_input.text)
+                    if extra_payment > 0 and extra_payment <= selected_loan.current_balance:
+                        # Calculate interest saved
+                        monthly_interest = selected_loan.interest_rate / 12
+                        interest_saved = extra_payment * monthly_interest
+                        
+                        benefit_text = f"Interest saved this month: ${interest_saved:.2f}"
+                        benefit_surface = self.text_font.render(benefit_text, True, GREEN)
+                        benefit_rect = benefit_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 130))
+                        surface.blit(benefit_surface, benefit_rect)
+                except ValueError:
+                    pass
+        
+        # Status message
+        if self.status_message:
+            status_surface = self.text_font.render(self.status_message, True, self.status_color)
+            status_rect = status_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 200))
+            surface.blit(status_surface, status_rect)
+        
+        # Draw buttons
+        for button in self.buttons:
+            button.draw(surface)
 
 class AssetDetailsScreen(Screen):
     """
@@ -841,7 +1446,22 @@ class AssetDetailsScreen(Screen):
     """
     def __init__(self, game):
         super().__init__(game)
-        self.buttons = [Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT - 80, 200, 50, "Back", action=self.go_back)]
+        
+        # Title and fonts
+        self.title_font = pygame.font.SysFont('Arial', FONT_LARGE)
+        self.text_font = pygame.font.SysFont('Arial', FONT_MEDIUM)
+        self.small_font = pygame.font.SysFont('Arial', FONT_SMALL)
+        
+        # Buttons
+        back_button = Button(
+            SCREEN_WIDTH // 2 - 100,
+            SCREEN_HEIGHT - 80,
+            200, 50,
+            "Back",
+            action=self.go_back
+        )
+        
+        self.buttons = [back_button]
 
     def go_back(self):
         from moneySmartz.screens.game_screen import GameScreen
@@ -849,7 +1469,123 @@ class AssetDetailsScreen(Screen):
 
     def draw(self, surface):
         surface.fill(WHITE)
-        # This would be implemented with asset details display
+        
+        # Title
+        title_surface = self.title_font.render("Asset Details", True, BLACK)
+        title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, 50))
+        surface.blit(title_surface, title_rect)
+        
+        if not self.game.player.assets:
+            no_assets_text = self.text_font.render("You don't have any assets yet.", True, BLACK)
+            no_assets_rect = no_assets_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+            surface.blit(no_assets_text, no_assets_rect)
+        else:
+            # Display asset information
+            y_pos = 120
+            total_current_value = 0
+            total_purchase_value = 0
+            
+            for i, asset in enumerate(self.game.player.assets):
+                # Asset header with icon
+                asset_header = self.text_font.render(f"{asset.asset_type}: {asset.name}", True, BLUE)
+                surface.blit(asset_header, (50, y_pos))
+                y_pos += 40
+                
+                # Asset details
+                value_change = asset.current_value - asset.purchase_value
+                value_change_percent = (value_change / asset.purchase_value) * 100 if asset.purchase_value > 0 else 0
+                
+                asset_details = [
+                    f"Purchase Value: ${asset.purchase_value:.2f}",
+                    f"Current Value: ${asset.current_value:.2f}",
+                    f"Age: {asset.age} years",
+                    f"Condition: {asset.condition}"
+                ]
+                
+                # Add value change information
+                if value_change >= 0:
+                    asset_details.append(f"Appreciation: +${value_change:.2f} ({value_change_percent:.1f}%)")
+                else:
+                    asset_details.append(f"Depreciation: ${abs(value_change):.2f} ({abs(value_change_percent):.1f}%)")
+                
+                # Asset-specific information
+                if asset.asset_type == "Car":
+                    if asset.condition == "Poor":
+                        asset_details.append("⚠️ Consider repairs or replacement")
+                    elif asset.current_value < asset.purchase_value * 0.3:
+                        asset_details.append("💡 Consider selling before further depreciation")
+                elif asset.asset_type == "House":
+                    if value_change > 0:
+                        asset_details.append("🏠 Property has appreciated in value")
+                    else:
+                        asset_details.append("🏠 Property value has declined")
+                
+                for j, detail in enumerate(asset_details):
+                    if "Appreciation:" in detail:
+                        color = GREEN
+                    elif "Depreciation:" in detail:
+                        color = RED
+                    elif "Current Value:" in detail:
+                        color = BLUE
+                    else:
+                        color = BLACK
+                    
+                    detail_surface = self.small_font.render(detail, True, color)
+                    surface.blit(detail_surface, (80, y_pos))
+                    y_pos += 25
+                
+                y_pos += 20  # Space between assets
+                total_current_value += asset.current_value
+                total_purchase_value += asset.purchase_value
+            
+            # Summary section
+            summary_y = SCREEN_HEIGHT - 200
+            summary_title = self.text_font.render("Asset Portfolio Summary", True, BLUE)
+            surface.blit(summary_title, (50, summary_y))
+            
+            total_change = total_current_value - total_purchase_value
+            total_change_percent = (total_change / total_purchase_value) * 100 if total_purchase_value > 0 else 0
+            
+            summary_details = [
+                f"Total Purchase Value: ${total_purchase_value:.2f}",
+                f"Total Current Value: ${total_current_value:.2f}"
+            ]
+            
+            if total_change >= 0:
+                summary_details.append(f"Total Appreciation: +${total_change:.2f} ({total_change_percent:.1f}%)")
+            else:
+                summary_details.append(f"Total Depreciation: ${abs(total_change):.2f} ({abs(total_change_percent):.1f}%)")
+            
+            for i, detail in enumerate(summary_details):
+                if "Total Appreciation:" in detail:
+                    color = GREEN
+                elif "Total Depreciation:" in detail:
+                    color = RED
+                elif "Total Current Value:" in detail:
+                    color = BLUE
+                else:
+                    color = BLACK
+                
+                detail_surface = self.text_font.render(detail, True, color)
+                surface.blit(detail_surface, (50, summary_y + 30 + i * 25))
+            
+            # Portfolio advice
+            if total_change_percent > 10:
+                advice = "📈 Your assets are performing well!"
+                advice_color = GREEN
+            elif total_change_percent < -20:
+                advice = "📉 Consider diversifying your asset portfolio"
+                advice_color = RED
+            else:
+                advice = "📊 Your asset portfolio is stable"
+                advice_color = BLACK
+            
+            advice_surface = self.small_font.render(advice, True, advice_color)
+            surface.blit(advice_surface, (50, summary_y + 120))
+        
+        # Draw buttons
+        for button in self.buttons:
+            button.draw(surface)
 
 class JobSearchScreen(Screen):
     """
