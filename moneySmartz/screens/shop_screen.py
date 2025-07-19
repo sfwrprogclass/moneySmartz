@@ -27,8 +27,8 @@ class ShopScreen(Screen):
             btn = Button(60, y, 300, 50, f"{item['name']} - ${item['price']}", action=lambda i=idx: self.select_item(i))
             self.buttons.append(btn)
             y += 60
-        # Move payment and back buttons to the far right
-        right_x = 700  # Adjust as needed for your window size
+        # Move payment and back buttons to the far right, spaced vertically
+        right_x = 900  # Further right for wider screens
         self.pay_cash_btn = Button(right_x, 120, 180, 40, "Pay Cash", action=self.pay_cash)
         self.pay_bank_btn = Button(right_x, 180, 180, 40, "Pay Bank", action=self.pay_bank)
         self.pay_credit_btn = Button(right_x, 240, 180, 40, "Pay Credit", action=self.pay_credit)
@@ -134,13 +134,12 @@ class ShopScreen(Screen):
                     if btn.action:
                         btn.action()
                         return
-            # Check payment buttons
-            if self.selected_item:
-                for btn in [self.pay_cash_btn, self.pay_bank_btn, self.pay_credit_btn]:
-                    if btn.rect.collidepoint(mouse_pos):
-                        if btn.action:
-                            btn.action()
-                            return
+            # Check payment buttons (always active)
+            for btn in [self.pay_cash_btn, self.pay_bank_btn, self.pay_credit_btn]:
+                if btn.rect.collidepoint(mouse_pos):
+                    if btn.action:
+                        btn.action()
+                        return
             # Check back button
             if self.back_btn.rect.collidepoint(mouse_pos):
                 if self.back_btn.action:
@@ -160,12 +159,12 @@ class ShopScreen(Screen):
             y += 60
         for btn in self.buttons:
             btn.draw(surface)
-        if self.selected_item:
-            self.pay_cash_btn.draw(surface)
-            self.pay_bank_btn.draw(surface)
-            self.pay_credit_btn.draw(surface)
+        # Always draw payment and back buttons
+        self.pay_cash_btn.draw(surface)
+        self.pay_bank_btn.draw(surface)
+        self.pay_credit_btn.draw(surface)
         self.back_btn.draw(surface)
         msg_font = pygame.font.SysFont('Arial', FONT_MEDIUM)
         msg = msg_font.render(self.message, True, RED if "Not" in self.message else GREEN)
         # Move message text further down to avoid overlap
-        surface.blit(msg, (60, 500))
+        surface.blit(msg, (60, 680))

@@ -134,7 +134,7 @@ class GUIManager:
     """
     def __init__(self, game):
         self.game = game
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE)
         pygame.display.set_caption("Money Smartz: Financial Life Simulator")
         self.clock = pygame.time.Clock()
         self.current_screen = None
@@ -177,13 +177,20 @@ class GUIManager:
             for event in events:
                 if event.type == QUIT:
                     self.running = False
-
+                elif event.type == pygame.VIDEORESIZE:
+                    self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
+                    # Optionally, update global SCREEN_WIDTH/HEIGHT if used elsewhere
+                    global SCREEN_WIDTH, SCREEN_HEIGHT
+                    SCREEN_WIDTH, SCREEN_HEIGHT = event.w, event.h
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE or event.key == pygame.K_BACKSPACE:
+                        # If the current screen has a back_btn, trigger its action
+                        if hasattr(self.current_screen, 'back_btn') and self.current_screen.back_btn and hasattr(self.current_screen.back_btn, 'action'):
+                            self.current_screen.back_btn.action()
             if self.current_screen:
                 self.current_screen.handle_events(events)
                 self.current_screen.update()
                 self.current_screen.draw(self.screen)
-                
             pygame.display.flip()
             self.clock.tick(FPS)
-
         pygame.quit()
